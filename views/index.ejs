@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+</head>
+
+<span id='variableJSON' hidden>
+    <%= JSON.stringify(data); %>
+</span>
+<body>
+    <canvas id="myChart"></canvas>
+    <img id="url" />
+
+    <% if(data)  %>
+    
+    <script type="text/javascript">
+
+        makeblob = function (dataURL) {
+            var BASE64_MARKER = ';base64,';
+            if (dataURL.indexOf(BASE64_MARKER) == -1) {
+                var parts = dataURL.split(',');
+                var contentType = parts[0].split(':')[1];
+                var raw = decodeURIComponent(parts[1]);
+                return new Blob([raw], { type: contentType });
+            }
+            var parts = dataURL.split(BASE64_MARKER);
+            var contentType = parts[0].split(':')[1];
+            var raw = window.atob(parts[1]);
+            var rawLength = raw.length;
+
+            var uInt8Array = new Uint8Array(rawLength);
+
+            for (var i = 0; i < rawLength; ++i) {
+                uInt8Array[i] = raw.charCodeAt(i);
+            }
+
+            return new Blob([uInt8Array], { type: contentType });
+        }
+
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var x = JSON.parse($('#variableJSON').text());
+        $('#variableJSON').remove();
+
+        function delay () {
+            var myChartData =(chart.toBase64Image());
+            var imageData={
+                url:String(myChartData)
+            }
+            console.log(myChartData)
+            document.getElementById("url").src=myChartData;
+            
+            $.ajax({
+             type: 'POST',
+              url: 'http://localhost:3000/', 
+              data: imageData,
+                dataType: 'json',
+                     
+              success: function(data) {
+                  console.log('success');
+               }
+         });
+        }
+        
+        
+        
+        var chart = new Chart(ctx, {
+            // The type of chart we want to create
+            type: 'bar',
+            // The data for our dataset
+            data: {
+                labels: x.map((each)=>each.name),
+                datasets: [{
+                    label: 'Savings vs Name',
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data: x.map((each)=>each.savings)
+                }]
+            },
+
+            // Configuration options go here
+            options: { 
+                animationSteps: 5,
+                animation: {
+                    onComplete:delay
+                }
+        }});
+
+        
+
+        
+    </script>
+
+</body>
+</html>
